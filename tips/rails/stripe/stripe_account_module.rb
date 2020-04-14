@@ -1,6 +1,5 @@
 # app/models/user.rb でincludeしてつかう
 # stripeのapi(gem)を使ったものなので流用可
-# StripeAccountEntityを使うべきだったかどうかは微妙
 require 'active_support/concern'
 module User::StripeAccountModule
   extend ActiveSupport::Concern
