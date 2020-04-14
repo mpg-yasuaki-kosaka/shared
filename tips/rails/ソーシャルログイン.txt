@@ -1,7 +1,5 @@
-
+参考
 　https://qiita.com/tkms0106/items/956972bdb0ce9c8ab9c6
-　https://github.com/collaborativeventures/stealth/pull/1300/files
-　https://github.com/collaborativeventures/stealth_api/pull/1136
 
 ローカルでテストするのに必要なもの
 ・httpsの開発環境URL　→　pumaかthinで
