@@ -1,15 +1,20 @@
-slack通知.txt
+要件
+　問題が発生したときなどにslack通知ができる機能を追加する
 
 アプリを立てて、webhook機能を追加
 https://qiita.com/Akira07/items/890fbbc6c384fcf875d0
 https://github.com/stevenosloan/slack-notifier
 
+--------------------------------------------------------------------------------
+
 gem "slack-notifier"
+
+-- 
 
 notifier = Slack::Notifier.new "WEBHOOK_URL"
 notifier.ping "Hello World"
 
-spec
+-- spec
 let(:notifier) { NotificationClass }
 let(:create_data) { create(:data) }
 
