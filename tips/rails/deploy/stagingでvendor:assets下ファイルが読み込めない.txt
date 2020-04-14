@@ -1,0 +1,7 @@
+couldn't find file 'dataTables/jquery.dataTables'
+などでstagingでvendor/assets下ファイルが読み込めない
+
+pathが通っていない可能性
+https://haayaaa.hatenablog.com/entry/2019/02/13/210629
+
+めんどいならapp/assetsに移すと早い

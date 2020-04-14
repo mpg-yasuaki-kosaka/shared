@@ -1,0 +1,9 @@
+実際には反映されている。
+formタグ自体のmethodは変わらないだけで、
+hiddenタグでmethodを持っている。
+
+= form_for(line_item, :method => :delete) do |f|
+↓
+<input type="hidden" value="delete" name="_method">
+
+https://stackoverflow.com/questions/7704973/getting-a-form-to-use-method-delete-rails

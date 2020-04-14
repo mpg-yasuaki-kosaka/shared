@@ -1,0 +1,12 @@
+// map()
+// Number()
+// get()
+// reduce()
+// toLocaleString()
+$(document).on "change", '.elements', ->
+  qtys = $('.elements').map ->
+    Number( $(this).val() )
+  sum = qtys.get().reduce(((a, b, index, array) ->
+    a + b
+  ), 0)
+  $('.sum_text').text(sum.toLocaleString())

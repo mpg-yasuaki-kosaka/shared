@@ -1,0 +1,9 @@
+# 個別 js include
+- content_for(:inpage_js) do
+  # layoutに以下を書いておく（一番下辺り）
+  = yield :inpage_js
+
+# 個別ページ(slimに書く場合)
+sass:
+  .bottom-border
+    border-bottom: 2px solid #bbe !important

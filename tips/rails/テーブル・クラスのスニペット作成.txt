@@ -1,0 +1,8 @@
+・dbextを有効にする
+・テーブル一覧を取得する
+　posgreなら　select relname as TABLE_NAME from pg_stat_user_tables order by TABLE_NAME;
+・テーブル一覧を２ファイル作る
+・クラス一覧を作る。↓コマンドとかで全選択してコマンド実行
+　:vmap ' <Plug>(operator-camelize)
+・sublimeで整形してCSVにする
+・取り込み・修正

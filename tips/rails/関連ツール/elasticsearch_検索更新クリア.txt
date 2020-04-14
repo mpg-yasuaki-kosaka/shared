@@ -1,0 +1,30 @@
+# 更新
+Model.__elasticsearch__.refresh_index!
+
+# 一旦elasticsearchのデータをクリアしたい場合は
+Model.create_index! force: true
+Model.imports
+
+=========================-
+elasticsearchオブジェクトをrailsコンソールから確認.txt
+# 全件取得 sizeデフォルト10
+hash= {query: {match_all: {} }, size: 1000}
+Model.__elasticsearch__.search(hash).to_a
+
+hash= {query: {match_all: {} }, size: 1000}
+Model.__elasticsearch__.search(hash).to_a
+# _index,_idに何が入っているかで基本のツリー構造が大体決まる（運用上どうしてるかによる）
+
+# kibana上で確認
+GET model/_search
+{"query":{"match_all":{}}, "size": 10000000}
+
+# 条件
+hash7= {query: {bool: {filter: [{bool: {must: [{term: {:"status"=>"ok"}}]}}]}}, size: 1000}
+# 否定
+hash6= {query: {bool: {filter: [{bool: {must_not: [{term: {:"status"=>"ok"}}]}}]}}, size: 1000}
+# 複数条件,ソート
+hash2= {query: {bool: {filter: [{bool: {must_not: [{exists: {field: :deleted_at}}], must: [{term: {available: true}}, {term: {:"status"=>"ok"}}]}}]}}, sort: [{"order"=>{order: :asc}}, {"id"=>{order: :asc}}], size: 100}
+
+# 更にいろいろ has_parent, exists
+{query: {bool: {filter: [{bool: {must_not: [{exists: {field: :deleted_at}}], must: [{term: {available: true}}, {term: {:"status"=>"ok"}}, {has_parent: {parent_type: "parent_table", query: {bool: {must: [{term: {id: 14}}], must_not: [{term: {data_type: "normal"}}, {exists: {field: :deleted_at}}]}}}}]}}]}}, sort: [{"order"=>{order: :asc}}, {"id"=>{order: :asc}}], size: 100}

@@ -1,0 +1,252 @@
+
+　https://qiita.com/tkms0106/items/956972bdb0ce9c8ab9c6
+　https://github.com/collaborativeventures/stealth/pull/1300/files
+　https://github.com/collaborativeventures/stealth_api/pull/1136
+
+ローカルでテストするのに必要なもの
+・httpsの開発環境URL　→　pumaかthinで
+・google,facebookのアカウント
+・https://console.developers.google.com と https://developers.facebook.com でのアプリ登録/認証設定
+　→.envに以下を追記。URLは両サービスhttps://localhost:3001で設定。
+
+google_oauth_client_id=***
+google_oauth_client_secret=***
+facebook_oauth_client_id=***
+facebook_oauth_client_secret=***
+
+gender,birthdayについて
+・google,facebookのgender,birthdayはどれも登録されており、かつ公開されている必要がある
+・googleのgenderはユーザーがgoogle plusに登録している必要がある(サービス終了した)
+・googleのbirthdayは、このgemでは取れない zquestz/omniauth-google-oauth2#136
+・facebookのgender,birthdayを取得するにはapp reviewを申請する必要がある
+　https://developers.facebook.com/docs/facebook-login/permissions#reference-user_gender
+　https://developers.facebook.com/docs/facebook-login/permissions#reference-user_birthday
+
+プロフィール画像について
+　・googleは未設定の場合でも名前画像が取れるがこれを判断するフラグはない
+　・画像のURLにパラメータを設定することでサイズ変更できる
+　　googleは?sz=400、facebookは?type=large の200x200が限界
+
+--------------------------------------------------------------------------------
+
+API
+-- app/services/user_services/create_service.rb
+user.skip_confirmation!
+# これはdeviseのメソッド(だったと思う)
+
+VIEW
+-- Gemfile
+gem 'omniauth-google-oauth2'
+gem 'omniauth-facebook'
+
+group :development
+  gem 'thin'
+end
+# thinを入れるのは必須ではない
+
+-- app/controllers/openid/oauth_controller.rb
+class Openid::OauthController < ApplicationController
+  def login
+    save_state_to_session
+    redirect_to "/openid/#{provider}/auth"
+  end
+
+  def callback
+    service = OpenidServices::LoginService.new(user_info, provider).execute!
+    if service.result == :sign_in
+      return_url = session['return_url'].presence || root_path
+      reset_session
+      session['token'] = service.token
+      session['user_id'] = service.user_id
+      redirect_to return_url
+    elsif service.result == :different_provider
+      flash[:error] = "このメールアドレスは別のログイン方法で登録済みです。"
+      logger.error "openid login failed. different provider error [provider: #{provider}, error: #{service.error}]"
+      redirect_to login_users_path
+    else
+      flash[:error] = "ログインできませんでした。"
+      logger.error "openid login failed. unexpected error [provider: #{provider}, error: #{service.error}]"
+      redirect_to login_users_path
+    end
+  end
+
+  private
+
+  def provider
+    params[:provider].to_s
+  end
+
+  def save_state_to_session
+    session['return_url'] = params[:return_url]
+  end
+
+  def user_info
+    auth = request.env['omniauth.auth']
+    user_info              = ActiveSupport::OrderedOptions.new
+    user_info.sub          = auth.uid
+    user_info.nickname     = auth.info.first_name
+    user_info.given_name   = auth.info.first_name
+    user_info.family_name  = auth.info.last_name
+    user_info.email        = auth.info.email
+    user_info.phone_number = nil
+    user_info.gender       = auth.extra&.raw_info&.gender
+    user_info.birthdate    = auth.extra&.raw_info&.birthday
+    user_info.language     = cookies[:locale]
+    user_info
+  end
+end
+
+-- app/views/user/sign_in_out/login_page.html.slim
+a class="r-login-btn" href=openid_oauth_login_path(provider: :facebook, return_url: @return_url) facebookでログイン
+a class="r-login-btn" href=openid_oauth_login_path(provider: :google, return_url: @return_url) googleでログイン
+
+-- config/initializers/omniauth.rb
+Rails.application.config.middleware.use OmniAuth::Builder do
+  provider :google_oauth2,
+    ENV['google_oauth_client_id'] || Rails.application.secrets.openid_connect[:google][:identifier],
+    ENV['google_oauth_client_secret'] || Rails.application.secrets.openid_connect[:google][:secret],
+    name:          'google',
+    scope:         'email, profile, plus.me',
+    info_fields:   'email, name, birthday, gender, first_name, last_name',
+    prompt:        'select_account',
+    request_path:  '/openid/google/auth',
+    callback_path: '/openid/google/callback'
+
+  provider :facebook,
+    ENV['facebook_oauth_client_id'] || Rails.application.secrets.openid_connect[:facebook][:identifier],
+    ENV['facebook_oauth_client_secret'] || Rails.application.secrets.openid_connect[:facebook][:secret],
+    request_path:  '/openid/facebook/auth',
+    callback_path: '/openid/facebook/callback',
+    scope:         'email, public_profile',
+    info_fields:   'email, name, birthday, gender, first_name, last_name'
+end
+
+-- config/routes.rb
+      scope controller: :oauth, as: :oauth do
+        # get ':provider' is defined by "config/initializers/omniauth.rb"
+        get ':provider/login',    to: 'oauth#login', as: 'login'
+        get ':provider/callback', to: 'oauth#callback', as: 'callback'
+      end
+
+-- spec/controllers/openid/oauth_controller_spec.rb
+require 'rails_helper'
+
+describe Openid::OauthController do
+  describe "login" do
+    it "redirect" do
+      get :login, params: {provider: :google}
+      expect(response.code.to_i).to eq 302
+    end
+
+    it "redirect" do
+      get :login, params: {provider: :facebook}
+      expect(response.code.to_i).to eq 302
+    end
+  end
+
+  describe "callback" do
+    let(:facebook_email) { "test123@facebook.com" }
+    let(:google_email) { "test123@google.com" }
+    let(:facebook_hash) {
+      OmniAuth::AuthHash.new({
+        "provider"=>"facebook",
+        "uid"=>"test_uid_facecbook",
+        "info"=>{ "email" => facebook_email, "name" => "", "first_name"=>"Faro", "last_name" => "Faku", "image" => "", },
+        "extra"=>{ "raw_info"=> {} }
+      })
+    }
+    let(:facebook_different_provider_hash) {
+      hash = facebook_hash.deep_dup
+      hash.info.email = google_email
+      hash
+    }
+    let(:google_hash) {
+      OmniAuth::AuthHash.new({
+        "provider"=>"google",
+        "uid"=>"test_uid_google",
+        "info"=>{ "email" => google_email, "name" => "", "first_name"=>"Garo", "last_name" => "Gaku", "image" => "", },
+        "extra"=>{ "raw_info"=> {} }
+      })
+    }
+    let(:google_different_provider_hash) {
+      hash = google_hash.deep_dup
+      hash.info.email = facebook_email
+      hash
+    }
+
+    context "facebook" do
+      it "sign_in" do
+        request.env["omniauth.auth"] = facebook_hash
+        VCR.use_cassette 'model/oauth/facebook_callback' do
+          get :callback, params: {provider: :facebook}
+        end
+        expect(response.code.to_i).to eq 302
+        expect(flash[:error]).to be_nil
+      end
+
+      it "different_provider" do
+        request.env["omniauth.auth"] = facebook_different_provider_hash
+        VCR.use_cassette 'model/oauth/facebook_different_provider_callback' do
+          get :callback, params: {provider: :facebook}
+        end
+        expect(response.code.to_i).to eq 302
+        expect(flash[:error]).to eq "このメールアドレスは別のログイン方法で登録済みです。"
+      end
+    end
+
+    context "google" do
+      it "sign_in" do
+        request.env["omniauth.auth"] = google_hash
+        VCR.use_cassette 'model/oauth/google_callback' do
+          get :callback, params: {provider: :google}
+        end
+        expect(response.code.to_i).to eq 302
+        expect(flash[:error]).to be_nil
+      end
+
+      it "different_provider" do
+        request.env["omniauth.auth"] = google_different_provider_hash
+        VCR.use_cassette 'model/oauth/google_different_provider_callback' do
+          get :callback, params: {provider: :google}
+        end
+        expect(response.code.to_i).to eq 302
+        expect(flash[:error]).to eq "このメールアドレスは別のログイン方法で登録済みです。"
+      end
+    end
+  end
+end
+
+-- spec/requests/authentication_spec.rb
+require 'rails_helper'
+
+describe 'auth' do
+  before do
+    OmniAuth.config.test_mode = true
+    OmniAuth.config.add_mock(:facebook, {uid: '123545', name: 'foo bar'})
+    OmniAuth.config.add_mock(:google, {uid: '54321', name: 'to be'})
+    OmniAuth.config.add_mock(:twitter, {uid: '54321', name: 'big fat'})
+  end
+  context 'facebook' do
+    before do
+      get '/openid/facebook/auth'
+    end
+    it 'redirect to facebook' do
+      expect(response.code.to_i).to eq 302
+    end
+  end
+
+  context 'google' do
+    before do
+      get '/openid/google/auth'
+    end
+    it 'redirect to google' do
+      expect(response.code.to_i).to eq 302
+    end
+  end
+
+  context 'twitter' do
+    it 'cannot access' do
+      expect{ get '/openid/twitter/auth' }.to raise_error(ActionController::RoutingError)
+    end
+  end
+end

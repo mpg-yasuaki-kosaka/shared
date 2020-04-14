@@ -1,0 +1,5 @@
+
+import queryString from 'query-string'
+
+queryString.parse(location.search)
+query.isModalOpen == 'true'

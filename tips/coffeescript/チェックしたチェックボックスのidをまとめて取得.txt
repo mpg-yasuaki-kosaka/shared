@@ -1,0 +1,10 @@
+# /users/bulk_edit を別タブで開く
+$('#js-status-id').on 'click', (event) ->
+  user_ids = $('[class="js-check"]:checked').map ->
+    $(this).data('user-id')
+  if user_ids.length == 0
+    alert("1件以上チェックを入れてください！")
+    return
+  url = '/users/bulk_edit?ids=' + user_ids.get()
+  url += '&status=' + $("#js-status").val()
+  window.open(url)

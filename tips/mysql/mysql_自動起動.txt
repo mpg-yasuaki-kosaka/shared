@@ -1,0 +1,7 @@
+mysql.server stop
+cp /usr/local/Cellar/mysql@5.6/5.6.39/homebrew.mxcl.mysql@5.6.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/homebrew.mxcl.mysql.plist
+
+# 起動確認
+ps ax | grep mysql
+mysql -uroot

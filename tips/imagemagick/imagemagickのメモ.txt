@@ -1,0 +1,19 @@
+# 必要
+brew install ghostscript
+
+imagemagick convert: no images defined でこける
+
+
+バージョンがあっていないので imagemagick を入れ直す
+もしくは、--build-from-source オプションを付けて、インストールし直す https://qiita.com/sea_mountain/items/5d5ae413ce4da5a14583
+$ brew uninstall imagemagick
+$ brew install imagemagick --build-from-source
+
+エラーメッセージ
+"`convert -monochrome -units pixelsperinch -density 204 -quality 100 -gravity Center -extent 1728x2290 /var/folders/s8/xk_w7c_91rg763y7hhhkhx9s53p9bh/T/d20190826-99801-1trwrtj/fa
+x.pdf /var/folders/s8/xk_w7c_91rg763y7hhhkhx9s53p9bh/T/d20190826-99801-1trwrtj/fax.tiff` failed with error:\n" +
+"convert: no images defined `/var/folders/s8/xk_w7c_91rg763y7hhhkhx9s53p9bh/T/d20190826-99801-1trwrtj/fax.tiff' @ error/convert.c/ConvertImageCommand/3235.\n"
+
+→ convertコマンドが成功するか試す。通常のpdfファイルなどで試す
+
+model.file.attach(io: StringIO.new(file), filename: 'temp.pdf', content_type: 'application/pdf')

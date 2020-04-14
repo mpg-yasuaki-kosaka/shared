@@ -1,0 +1,47 @@
+https://github.com/thinreports/thinreports-generator
+read.me 参照
+--------------------------------------------------------------------------------
+スタイル
+
+# 表示・非表示
+page.item(:title).hide
+page.item(:title).show
+page.item(:title).visible(true)
+
+# テキストの色
+page.item(:subject).style(:color, 'red') # Webセーフカラーのみ
+page.item(:subject).style(:color, '#ff0000')
+page.item(:subject).style(:color, 'ff0000')
+
+# テキストの位置（横位置）
+page.item(:note).style(:align, :center) # :left/:center/:right
+
+# テキストの位置（楯位置）
+page.item(:note).style(:valign, :bottom) # :top/:center/:bottom
+
+# フォントスタイル
+page.item(:message).style(:bold, true) # 太字
+page.item(:message).style(:italic, true) # 斜体
+page.item(:message).style(:underline, false) # 下線
+page.item(:message).style(:linethrough, true) # 取り消し線
+
+# 図形スタイル
+page.item(:rect).style(:fill, 'black') # 塗り
+page.item(:ellipse).style(:border_color, '#0000ff') # 枠線の色
+page.item(:line).style(:border_width, 10) # 枠線の太さ
+page.item(:rect).style(:border, [5, '#00ff00']) # 枠線の色と太さ
+
+# スタイルの一括設定 #styles メソッド
+page.item(:label).styles(:bold => true,
+                         :underline => true,
+                         :color => 'red')
+
+# スタイルの一括設定 メソッドチェーン
+page.item(:label).style(:bold, true)
+                 .style(:underline, true)
+                 .style(:color, 'red')
+                 .value('OSS!')
+
+# 現在のスタイルを取得する
+page.item(:text).style(:color, 'red')
+page.item(:text).style(:color) #=> 'red'

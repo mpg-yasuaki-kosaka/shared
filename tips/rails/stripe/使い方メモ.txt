@@ -1,0 +1,133 @@
+①bank_accountとtokenを作る
+Stripe::Token.create(
+  :bank_account => {
+    :country => "JP",
+    :currency => "jpy",
+    :account_holder_name => "Taro Yamaha",
+    :account_holder_type => "individual",
+    :routing_number => "1234-567",
+    :account_number => "00012345",
+  }
+)
+口座情報は全てはstripe側に保存。
+自社側にはtokenとStripe::Accountのidのみを持つ。
+
+②accountを作る。
+Stripe::Account.create(
+  :type => 'custom',
+  yamada.tarou.4@test.com',
+  "legal_entity" => {
+    ... 住所等はここ
+  }
+)
+
+③accountとbank_accountを紐付ける
+account = Stripe::Account.retrieve("acct_1CACrxCcJGFst8P6")
+account.external_accounts.create(external_account: "btok_1CACo9JRdyRfIcLahNyYrJ2l")
+
+account(受取人の基本情報)に対してbank_account(口座情報)を紐付ける。
+stripe apiの仕様上bank_accountを複数作成・保持することは可能だが、
+自社システム側で1:1(or 0)となるように制御する。
+
+④stripeのサービス規約に同意させる
+acct = Stripe::Account.retrieve("acct_1CACrxCcJGFst8P6")
+acct.tos_acceptance.date = Time.now.to_i
+acct.tos_acceptance.ip = request.remote_ip # Assumes you're not using a proxy
+acct.save
+
+⑤payout（ホストのリアル口座へ）
+Stripe::Payout.create(
+  {:amount => 100,
+  :currency => "jpy",
+  :destination => "ba_1CACsWCcJGFst8P60tW5OQDT",
+  description: "Payout to #{email}"},
+  {
+    "Stripe-Account": "acct_1CACrxCcJGFst8P6"
+  }
+)
+
+ーーーー
+# account:
+# 　stripeのアカウント。bank_accountはこれに紐づく。
+# 　emailの重複不可。
+# 　account.legal_entityが法人情報。
+# 　account.legal_entity.verificationが証明書情報。
+# bank_account:
+# 　stripe口座。一応、1つのaccountに対して複数登録は可能で default_for_currency == true となっているものが有効なbank_account。
+# 　update用のapiは存在するものの日本のアカウントでは使用することができないため、delete/insert方式で更新をかける。
+#   更新に必要な手順があり、いきなり追加(create)しようとしてもエラーになる。
+# 　先に古いbank_account.default_for_currency = falseにすることで、新しいbank_accountが作成可能となる。
+#   古いbank_accountはそのままだと残り続けるため削除する。
+# 　account.external_accounts の中に保存される。
+# charge:
+# 　stripe口座に入金する
+# transfer:
+# 　stripe口座から別のstripe口座に送金する
+# payout:
+# 　stripeのバーチャル口座から実際の銀行口座へ出金する。指定額以上がbalanceに入っている必要がある
+# balance:
+# 　stripe口座の残高。avilable.amountがpayout可能な金額
+
+- その他の操作
+ - accountの呼び出し
+   account = Stripe::Account.retrieve("acct_1CACrxCcJGFst8P6")
+ - bank_accountの呼び出し
+   account.external_accounts.create(external_account: "btok_1CACo9JRdyRfIcLahNyYrJ2l") # => stripeのbank_accountのID
+ - accountの更新
+  account.legal_entity.gender = "male"
+  account.save
+ - payout可能かどうか
+  accpunt.payouts_enabled == true
+
+- 残高を増やす（入金する）
+  Stripe::Charge.create(
+    :amount => 1000,
+    :currency => "jpy",
+    :source => "tok_bypassPending",
+    :description => "test charge3"
+  )
+  4000 0000 0000 0077 番号（あるいは tok_bypassPending）のテストカード [1] を用いて Charge（お支払い）を作成
+
+- bank_accountの直接更新は不可。削除してから再作成する
+  https://stripe.com/docs/api/ruby#customer_update_bank_account => これは米国内専用で日本では使用不可とのこと
+
+- 管理ツール
+ https://dashboard.stripe.com/test/applications/users/overview
+ ここで状況を確認できる
+
+- APIリファレンスの日本語訳
+ https://qiita.com/koki1023/items/dd4310de9888efe278a9
+ ※誤字多いので間違いなどもあるかも
+
+=============================
+
+# 簡易仕様
+
+user = User.last # 対象ユーザー
+user.stripe_account_id # => nil
+sa = FactoryGirl.attributes_for(:stripe_account) # stripe_accountの属性hash
+user.create_stripe_account( sa ) # stripe_accountの作成
+user.stripe_account_id # => 値がセットされる
+ba = FactoryGirl.attributes_for(:bank_account) # bank_accountの属性hash
+user.create_bank_account( ba ) # bank_accountの作成及び更新。要stripe_account
+
+user.stripe_account # stripe_account_entityの取得
+user.raw_stripe_account # stripe_account生オブジェクトの取得
+user.update_stripe_account( {} ) # stripe_account_entityの更新
+user.delete_stripe_account # stripe_accountの削除
+
+user.bank_account # bank_account_entityの取得
+user.raw_bank_account # bank_account生オブジェクトの取得
+user.create_bank_account( ba ) # bank_accountの更新はこれ古いものは削除
+user.delete_bank_account # bank_accountの削除
+
+# bank_accountはこれで呼び出すことができない
+Stripe::BankAccount.retrieve([bank_accountのid])
+=> NotImplementedError: Bank accounts cannot be retrieved without an account ID. Retrieve a bank account using account.external_accounts.retrieve('card_id')
+
+# テスト送金/入金
+user.transfer(1000)
+user.test_charge(1000)
+=> 同時にstripe側でbalanceデータも作成される
+# payout可能額の確認
+user.available_balance

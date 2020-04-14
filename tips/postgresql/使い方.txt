@@ -1,0 +1,49 @@
+\du　ユーザー一覧
+\l　DB一覧
+\dt テーブル一覧
+\d [テーブル名] テーブル定義
+
+// db作成
+drop database development;
+create database development;
+
+create role postgres
+
+// ユーザー作成
+// create role user;
+// drop role user;
+
+// 権限付与
+ALTER ROLE "postgres" WITH LOGIN;
+ALTER ROLE "postgres" SUPERUSER;
+
+// プロセス立ち上げ
+postgres -D /usr/local/var/postgres
+
+// コンソール起動
+psql development
+
+sudo -u yamada.tarou psql postgres
+
+// テーブル一覧 https://devlights.hatenablog.com/entry/20080226/p1
+select relname as TABLE_NAME from pg_stat_user_tables order by TABLE_NAME;
+
+// dump
+pg_dump -h ***.rds.amazonaws.com -U root -W -F t stg_db > bk_20190709.sql
+
+// scp ローカルで
+scp doushin-staging-1:/opt/www/dir/current/bk_20190709.sql ~/Downloads
+
+// restore
+pg_restore --verbose --clean --no-acl --no-owner -h localhost -U postgres -d development ~/Downloads/chrome/bk_20190709.sql
+
+// dumpのリストア時データが2重になる場合
+drop schema public cascade;
+
+// postgres数値の文字列化
+'' || users.id
+
+// GUIツール postico
+https://eggerapps.at/postico/
+ライセンス
+https://sites.fastspring.com/eggerapps/order/dl/EGG191218-2821-85129L

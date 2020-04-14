@@ -1,0 +1,16 @@
+autokana キー入力からひらがな変換
+
+$ npm install jquery --save
+$ npm install jquery.autokana --save
+
+import jquery from 'jquery'
+window.$ = window.jQuery=jquery
+require('jquery.autokana')
+
+componentDidMount(){
+  $.fn.autoKana('#moto', '#saki', { katakana : false })
+}
+updateState(element, value){
+  this.setState({[element]: value})
+  if (element == "moto"){ this.setState({saki: $("#saki").val() }) }
+}

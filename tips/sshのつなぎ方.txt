@@ -1,0 +1,7 @@
+# alias create_ssh='cd ~/.ssh; ssh-keygen -t rsa'
+# alias set_ssh='eval $(ssh-agent -s); ssh-add ~/.ssh/id_rsa'
+
+・create_sshとset_sshをそれぞれ実行する
+・~/.ssh/configのホスト情報をもらってつないで見る。
+　permission denied系のエラーが出ることを確認
+・~/.ssh/id_rsa.pubの中身を管理者に渡して権限設定してもらう

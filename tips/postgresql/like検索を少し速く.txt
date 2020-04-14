@@ -1,0 +1,9 @@
+CREATE EXTENSION pg_trgm;
+
+こんな感じ？
+CREATE INDEX master_torihikisakis_code_tri_gram ON master_torihikisakis USING gin (sf_translate_case(code) gin_trgm_ops)
+
+
+1.5s→0.9sくらいの短縮はできた。
+--
+ただできるだけ仕様側での対応にしたほうが良さそう。（前方一致・後方一致等）

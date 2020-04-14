@@ -1,0 +1,12 @@
+
+deployがこける場合
+  sshでstagingにつなげるか確認
+  sshの確認
+    鍵のforwardの設定
+    ローカルの鍵を踏み台に連れていく
+
+    eval $(ssh-agent -s)
+    ssh-add ~/.ssh/id_rsa
+    githubに鍵登録
+    https://github.com/settings/keys
+  ssh -T git@github.comを叩いて成功するか確認

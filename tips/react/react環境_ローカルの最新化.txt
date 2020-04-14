@@ -1,0 +1,6 @@
+npm i npm
+yarn install --ignore-engines
+
+JavaScript heap out of memoryが出る場合、
+$ vi ./node_modules/.bin/webpack-dev-server
+$ 1行目に # #!/usr/bin/env node --max_old_space_size=4096 を追記。sizeはもっと大きくても良さそう

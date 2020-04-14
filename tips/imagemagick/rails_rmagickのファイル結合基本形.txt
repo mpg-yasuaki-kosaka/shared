@@ -1,0 +1,43 @@
+
+
+file1 = File.new("/Users/user/Pictures/適当画像/banana.jpg")
+t1 = Tempfile.open(["", ".jpeg"]).binmode
+t1.write(file1)
+
+file2 = File.new("/Users/user/Pictures/適当画像/itigo.jpg")
+t2 = Tempfile.open(["", ".jpeg"]).binmode
+t2.write(file2)
+
+file3 = Magick::ImageList.new(file1, file2)
+file3 = file3.append(true)
+file3.write("/Users/user/Pictures/適当画像/concated.jpg")
+
+t3 = Tempfile.open(["", ".jpeg"]).binmode
+t3.write(file3.to_blob)
+
+- decodeからの流れ
+  def create_file(params)
+    file1 = decode(params[:file1])
+    return file1 if params[:file2].blank?
+    file2 = decode(params[:file2])
+    file3 = nil
+    create_temp_file(file1) do |temp_file1|
+      create_temp_file(file2) do |temp_file2|
+        file3 = Magick::ImageList.new(temp_file1, temp_file2)
+        file3 = file3.append(true)
+      end
+    end
+    file3.to_blob
+  end
+
+  def temp_file_open(params)
+    file = create_file(params)
+    create_temp_file(file) do |temp_file|
+      yield temp_file
+    end
+  end
+
+  def decode(file)
+    base64_image = file.split(',', 2).last
+    Base64.decode64(base64_image)
+  end

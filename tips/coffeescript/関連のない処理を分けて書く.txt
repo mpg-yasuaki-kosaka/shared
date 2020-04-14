@@ -1,0 +1,13 @@
+# function1
+$ ->
+  $(document).on "change", '.js-function1', (event) ->
+    $('#js-function1-count').prop('disabled', !$(this).prop('checked'))
+
+  initPaymentType = ->
+    $('#js-function1-count').prop('disabled', !$('.js-function1').prop('checked'))
+
+  initPaymentType()
+
+# function2
+$ ->
+  $(document).on "change", '.js-function2', (event) ->

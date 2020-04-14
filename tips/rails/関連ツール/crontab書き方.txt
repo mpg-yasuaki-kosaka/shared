@@ -1,0 +1,9 @@
+crontab(sidekiq-cron)
+http://www.server-memo.net/tips/crontab.html
+
+5 2 1 * * /your/batch/command
+毎月1日の2時5分に/your/batch/commandを実行する
+1 0 4 * * /your/batch/command
+
+*/10 * * * *
+10分毎

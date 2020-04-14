@@ -1,0 +1,5 @@
+keys = $.map(hash, (value, key) ->
+  return key;
+)
+
+rubyのmapとはvalue, keyの順が逆になるっぽいので注意

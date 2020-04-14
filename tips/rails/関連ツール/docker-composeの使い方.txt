@@ -1,0 +1,31 @@
+
+
+# ====== 初期設定 ======
+# docker-compose.yml,Dockerfile が正しく記述されていない場合は動かないので諦めるか自分で書く
+# 複数システムを動かす必要がある場合は、docker用( 環境作成用 )のリポジトリが別にたっていることもある
+git clone [repo1のurl]
+cd ~/repos/repo1
+
+docker build
+docker-compose up api webpack app mysql elasticsearch sidekiq letter_opener admin
+# docker-compose up [services..]
+
+# =====================
+
+# 落とす, 再起動
+docker-compose down
+docker-compose up app api
+
+# gem等がアップデートされた場合
+docker-compose down
+docker-compose build
+docker-compose up
+
+# ActiveRecord::PendingMigrationError が消えない場合
+docker-compose run api rails db:migrate
+
+# 他
+# dockerのプロセスを確認
+docker ps
+# dockerのプロセスを停止
+docker stop [id]

@@ -1,0 +1,19 @@
+
+# bootstrapのレイアウト
+
+app/views/shared/_radio_group.html.slim
+/ arg: f, name, options, checked_value
+- options.each do |option|
+  - value, label = option
+  => f.radio_button name, value, checked: value.to_s == checked_value.to_s
+  => label "q_#{name}_", value, label
+
+app/views/users/index.html.slim
+  .form-group
+    label.col-sm-4.control-label チェック
+    .col-sm-4.form-control-static
+      = render "shared/radio_group",
+        f: f,
+        name: :status,
+        options: [["", "全て"], [false, "済"], [true, "未済"]],
+        checked_value: @search_params[:status]

@@ -1,0 +1,6 @@
+
+# サイズ：降順、受付番号：昇順でソート
+models.sort! do |d1, d2|
+  (d2.size <=> d1.size).nonzero? ||
+  (d1.no <=> d2.no)
+end

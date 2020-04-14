@@ -1,0 +1,1 @@
+User.all.map(&:id).group_by{|i| i}.reject{|k,v| v.one?}.keys

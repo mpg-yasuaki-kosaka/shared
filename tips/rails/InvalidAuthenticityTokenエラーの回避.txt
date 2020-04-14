@@ -1,0 +1,17 @@
+ActionController::InvalidAuthenticityTokenエラーの回避.txt
+
+https://stackoverflow.com/questions/50678917/actioncontrollerinvalidauthenticitytoken-in-postscontrollercreate
+他の人が指摘したように、スキップverify_authenticity_tokenはオプションではなく、アプリのセキュリティに大きな穴を開けます。
+
+通常、例外は次の2つの場合に発生します。セッションが切れた場合、フォームはcsrf_meta_tagsなしでajax経由で送信されます。
+
+問題の適切な解決策は、次のように例外を救済し、ユーザーのセッションをリセットすることです。
+
+rescue_from ActionController::InvalidAuthenticityToken do
+  logger.info "Compromised session found."
+  # リロードでエラーを起こしたときもセッションが切れるので、resetまではしないでおく
+  # reset_session
+  flash[:error] = "You're session has expired"
+  redirect_to root_path # or new_user_session_path
+end
+

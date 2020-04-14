@@ -1,0 +1,74 @@
+CircleCI1.0 => 2.0へアップグレード
+
+・First-class Docker Support：DockerのネイティブサポートとDockerレイヤーキャッシュの導入
+Workflows：ビルド、テスト、デプロイをジョブとして柔軟に管理できるようになった
+Advanced Caching：キャッシュの保存とリストアをイメージ、ソースコード、依存関係に対して行うことができるようになった。
+https://developer.medley.jp/entry/2017/10/24/174000
+
+・ElasticSearchのバイナリを予め用意しておく
+bin/ にElasticSearchのファイル群を用意しておくことにより、テスト時のwgetを省略
+rails_helper.rb でExtensionで起動できるため、ローカルで実行する際、既に起動しているElasticSearchに影響がない
+
+spec/rails_helper.rb
+　　config.before(:suite) do
+    DatabaseCleaner.strategy = :truncation
+
+    Elasticsearch::Extensions::Test::Cluster::Cluster.new(elastic_options).start unless Elasticsearch::Extensions::Test::Cluster::Cluster.new(elastic_options).running?
+    ENV.update("ELASTICSEARCH_URL" => "http://localhost:#{elastic_options[:port].to_s}")
+  end
+.
+.
+.
+.
+  config.after(:suite) do
+    Elasticsearch::Extensions::Test::Cluster::Cluster.new(elastic_options).stop if Elasticsearch::Extensions::Test::Cluster::Cluster.new(elastic_options).running?
+  end
+
+
+・BootSnapの導入
+bootsnapについて調べてみた https://qiita.com/Daniel_Nakano/items/aadeaa7ae4e227b73878
+
+・Railsのテスト実行時間を1/3まで短縮した話 (Rspec + CircleCI)
+https://medium.com/anypay-tech-blog/improve-rspec-tests-on-circleci-441e78c1796c
+
+config/boot.rb
+ENV['BUNDLE_GEMFILE'] ||= File.expand_path('../Gemfile', __dir__)
+
+require 'bundler/setup' # Set up gems listed in the Gemfile.
+require 'bootsnap'
+env = ENV['RAILS_ENV'] || "development"
+if env == 'development' || env == 'test'
+  Bootsnap.setup(
+      cache_dir:            'tmp/cache',          # キャッシュを保存するパス
+      development_mode:     env == 'development', # RACK_ENV、RAILS_ENV
+      load_path_cache:      true,                 # $LOAD_PATHをキャッシュする
+      autoload_paths_cache: true,                 # ActiveSupport::Dependencies.autoload_pathsをキャッシュする
+      compile_cache_iseq:   true,                 # rubyの実行結果をキャッシュする
+      compile_cache_yaml:   true                  # YAMLのコンパイル結果をキャッシュする
+  )
+end
+
+--------
+spec
+
+・TestProfの導入
+https://test-prof.evilmartians.io/#/
+
+・FactoryGirl からFactoryBot へ移行
+https://qiita.com/jnchito/items/c71b8f66f61214227555
+
+・テスト毎にInsert/TruncateしているDBデータをRollbackで対応する
+TruncateするよりRollbackのほうが早い
+
+spec/rails_helper.rb
+# metadataにuse_transactionがついているdescribe向け設定
+config.before(:all, :use_transaction) do
+  DatabaseCleaner.strategy = :transaction
+end
+
+config.after(:all, :use_transaction) do
+  DatabaseCleaner.clean_with(:truncation)
+end
+
+# metadata :use_transactionを使う
+describe Model, :use_transaction, type: :model do

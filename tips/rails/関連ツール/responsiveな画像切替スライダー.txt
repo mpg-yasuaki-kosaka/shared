@@ -1,0 +1,3 @@
+
+react: react responsive carousel
+jQuery: https://qiita.com/katsunory/items/25b385aae0f07b41e611

@@ -1,0 +1,4 @@
+vi ./node_modules/.bin/webpack-dev-server
+
+# 1行目に --max_old_space_size を追加
+# #!/usr/bin/env node --max_old_space_size=4096

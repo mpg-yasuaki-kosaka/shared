@@ -1,0 +1,26 @@
+ThinreportsとQRコードの実装メモ.txt
+
+report = Thinreports::Report.new
+report.use_layout Rails.root.join('dir', 'file').to_s
+report.start_new_page do |page|
+  # QR Code
+  page.item(:qr).src(barcode(:qr_code, 'http://www.thinreports.org/', :ydim => 5, :xdim => 5))
+end
+report.generate
+
+QRコード
+
+require 'barby/barcode/code_25_interleaved'
+require 'barby/barcode/code_39'
+require 'barby/barcode/codabar'
+require 'barby/barcode/qr_code'
+require 'barby/outputter/cairo_outputter'
+
+def qr(digits)
+  code = Barby::QrCode.new(digits)
+  outputter = Barby::CairoOutputter.new(code)
+  StringIO.new(outputter.to_png)
+end
+
+barcode = qr(barcode, xdim: 4, margin: 0)
+page.item(:barcode).src(barcode)

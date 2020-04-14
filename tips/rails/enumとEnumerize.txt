@@ -1,0 +1,28 @@
+enumとEnumerize.txt
+
+●enum
+tbd
+
+●Enumerize
+https://doruby.jp/users/TM/entries/Rails_Enumerize_
+
+extend Enumerize
+enumerize :order_type, in: { ori: 1, pos: 2 }, scope: true
+してテーブルのデフォルトを1にしておくと
+pry> model.order_type_text
+=> "Ori"
+pry> model.order_type
+=> "ori"
+pry> model.order_type_value
+=> 1
+model.order_type == :ori
+=> true
+
+クラスメソッド
+Model.with_order_type(:ori).class
+=> Model::ActiveRecord_Relation
+Model.order_type.values
+=> ["ori", "pos"]
+Model.order_type.options
+=> [["Ori", "ori"], ["Pos", "pos"]]
+Model.order_type.value_hash は何故か使えない

@@ -1,0 +1,12 @@
+
+web-dev-serverで、{{FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - process out of memory}}
+が出て最後まで終わらない。
+
+Springを無効にする
+環境変数設定後にwebpack-dev-serverを起動。
+export DISABLE_SPRING=1 yarn dev
+
+nodeのメモリサイズを増やす
+vi ./node_modules/.bin/webpack-dev-server
+# 1行目に --max_old_space_size を追加
+# #!/usr/bin/env node --max_old_space_size=4096

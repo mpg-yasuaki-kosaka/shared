@@ -1,0 +1,15 @@
+
+VCR.use_cassette 'controller/resource/create' do
+　　。。処理
+end
+
+VCR.use_cassette 'model/resource/create' do
+　　。。処理
+end
+
+VCRは一度実行すると、spec/vcr/にymlが保存され２度目以降の通信はそのデータを参照するため、
+開発時は一度そのファイルを削除しないとサーバー側からの正しいレスポンスを得られない。
+
+別リポジトリで立っているAPIサーバーを叩く場合はを、specで叩かれるAPIは開発環境のものが叩かれるためAPIサーバーのDBはtestではなくdevになるので注意。
+
+

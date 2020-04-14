@@ -1,0 +1,12 @@
+ABテスト.txt
+# 分岐処理
+pattern = ab_test(test_name, patterns)
+if pattern == 'A'
+end
+
+# 完了
+ab_finished(:experiment_name, reset: false)
+
+# 確認
+gem 'split', require: 'split/dashboard'
+していれば /split で画面確認。本番で表示させないように注意

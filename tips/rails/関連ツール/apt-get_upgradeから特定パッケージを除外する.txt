@@ -1,0 +1,14 @@
+apt-get_upgradeから特定パッケージを除外する.txt
+
+https://qiita.com/strsk/items/c933a661c077a666073a
+
+apt-get update のあとから apt-get upgradeする前までに
+
+# holdする
+$ echo [パッケージ名] hold | sudo dpkg --set-selections
+
+# holdしたものを解除する。
+$ echo [パッケージ名] install | sudo dpkg --set-selections
+
+# パッケージの状態を確認
+$ dpkg --get-selectionsreturn
