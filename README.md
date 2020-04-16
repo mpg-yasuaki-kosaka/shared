@@ -11,4 +11,4 @@ https://github.com/kosakaya/shared/blob/master/tips/rails/関連ツール/slack�
 
 #### Railsのコードを書く上での基礎的な考え方をまとめた記事(以前qiitaに投稿したもの)
 
-https://github.com/kosakaya/shared/blob/master/tips/rails/考察/脱Rails初心者のためのリファクタリングガイド.txt
+https://github.com/kosakaya/shared/blob/master/tips/rails/考察/脱Rails初心者のためのリファクタリングガイド.md
